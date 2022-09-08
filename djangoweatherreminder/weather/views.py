@@ -13,12 +13,14 @@ import os
 
 load_dotenv()
 
+
 class UserSubscriptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         user = request.user
         subscriptions = UserSubscription.objects.filter(user=user)
+        # subscriptions = user.subscriptions
         serializer = UserSubscriptionSerializer(subscriptions, many=True)
         return Response(serializer.data)
 
@@ -30,7 +32,7 @@ class NewSubscriptionView(APIView):
         city_data = {
             'name': request.POST['city_name'],
             'state': request.POST.get('state', ''),
-            'country': request.POST['country_code'],
+            'country_code': request.POST['country_code'],
         }
 
         if not CityName.objects.filter(name=city_data['name']).exists():
@@ -82,3 +84,19 @@ class NewSubscriptionView(APIView):
             return Response(subscription_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(subscription_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubscriptionActionsView(APIView):
+    def delete(self, request, subscr_id):
+        user = request.user
+        subscription = user.subscriptions.get(id=subscr_id)
+        if not subscription:
+            return Response({"res": "Object with todo id does not exists"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                            )
+        user.subscriptions.remove(subscription)
+        subscription.delete()
+        return Response(
+            {"res": "Object deleted!"},
+            status=status.HTTP_200_OK
+        )

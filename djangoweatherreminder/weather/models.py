@@ -5,11 +5,11 @@ from django.contrib.auth.models import User
 class CityName(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=150)
-    country = models.CharField(max_length=150)
+    country_code = models.CharField(max_length=2)
     state = models.CharField(max_length=150, blank=True)
 
     def __str__(self):
-        return f"{self.name}, {self.state}, {self.country}"
+        return f"{self.name}, {self.state}, {self.country_code}"
 
 
 class CityWeather(models.Model):
@@ -32,8 +32,8 @@ class CityWeather(models.Model):
 
 
 class UserSubscription(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscriptions")
-    city = models.ForeignKey(CityName, on_delete=models.CASCADE, related_name="subscriptions")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscriptions", null=True)
+    city = models.ForeignKey(CityName, on_delete=models.CASCADE, related_name="subscriptions", null=True)
     weather_info = models.ForeignKey(CityWeather, on_delete=models.CASCADE, related_name="subscriptions", null=True)
     notification_frequency = models.IntegerField()
     last_info_update = models.DateTimeField(auto_now=True)

@@ -7,4 +7,5 @@ urlpatterns = [
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('subscriptions/all/', views.UserSubscriptionsView.as_view(), name='subscriptions_list'),
     path('subscriptions/new/', views.NewSubscriptionView.as_view(), name='new_subscription'),
+    path('subscriptions/<int:subscr_id>/', views.SubscriptionActionsView.as_view(), name='new_subscription'),
 ]
