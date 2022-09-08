@@ -6,10 +6,10 @@ class CityName(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=150)
     country = models.CharField(max_length=150)
-    region = models.CharField(max_length=150)
+    state = models.CharField(max_length=150, blank=True)
 
     def __str__(self):
-        return f"{self.name}, {self.region}, {self.country}"
+        return f"{self.name}, {self.state}, {self.country}"
 
 
 class CityWeather(models.Model):
@@ -22,9 +22,9 @@ class CityWeather(models.Model):
     pressure = models.FloatField()
     visibility = models.FloatField()
     wind_speed = models.FloatField()
-    clouds = models.FloatField()
-    rain = models.FloatField()
-    snow = models.FloatField()
+    clouds = models.FloatField(blank=True)
+    rain = models.FloatField(blank=True)
+    snow = models.FloatField(blank=True)
 
     def __str__(self):
         return f"city {self.city}, weather: {self.weather_description}, {self.temperature}°C, " \
