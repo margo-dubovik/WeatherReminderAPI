@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,8 +19,7 @@ class UserSubscriptionsView(APIView):
 
     def get(self, request):
         user = request.user
-        subscriptions = UserSubscription.objects.filter(user=user)
-        # subscriptions = user.subscriptions
+        subscriptions = user.subscriptions
         serializer = UserSubscriptionSerializer(subscriptions, many=True)
         return Response(serializer.data)
 
@@ -89,7 +88,7 @@ class NewSubscriptionView(APIView):
 class SubscriptionActionsView(APIView):
     def delete(self, request, subscr_id):
         user = request.user
-        subscription = user.subscriptions.get(id=subscr_id)
+        subscription = get_object_or_404(UserSubscription, pk=subscr_id)
         if not subscription:
             return Response({"res": "Object with todo id does not exists"},
                             status=status.HTTP_400_BAD_REQUEST,

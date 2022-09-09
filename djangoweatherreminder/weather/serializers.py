@@ -6,7 +6,7 @@ from .models import CityName, CityWeather, UserSubscription
 class CityNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = CityName
-        fields = ['name', 'country', 'state', ]
+        fields = ['name', 'country_code', 'state', ]
 
 
 class CityWeatherSerializer(serializers.ModelSerializer):
@@ -19,4 +19,4 @@ class CityWeatherSerializer(serializers.ModelSerializer):
 class UserSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSubscription
-        fields = ['user', 'city', 'weather_info', 'notification_frequency', 'last_info_update', ]
+        fields = ['id', 'user', 'city', 'weather_info', 'notification_frequency', 'last_info_update', ]
