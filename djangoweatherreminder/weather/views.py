@@ -86,16 +86,39 @@ class NewSubscriptionView(APIView):
 
 
 class SubscriptionActionsView(APIView):
-    def delete(self, request, subscr_id):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request, id):
         user = request.user
-        subscription = get_object_or_404(UserSubscription, pk=subscr_id)
-        if not subscription:
-            return Response({"res": "Object with todo id does not exists"},
+        user_subscriptions = user.subscriptions.all()
+        subscription = get_object_or_404(UserSubscription, pk=id)
+        if not subscription or subscription not in user_subscriptions:
+            return Response({"res": f"Subscription with id={id} does not exist for this user"},
                             status=status.HTTP_400_BAD_REQUEST,
                             )
-        user.subscriptions.remove(subscription)
-        subscription.delete()
-        return Response(
-            {"res": "Object deleted!"},
-            status=status.HTTP_200_OK
-        )
+        else:
+            changes = request.data.get('changes')
+            new_data = {key: value for key, value in changes.items()}
+            print("new_data=", new_data)
+            subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_data, partial=True)
+            if subscription_serializer.is_valid():
+                subscription_serializer.save()
+                return Response({"res": "Subscription edited"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        user = request.user
+        user_subscriptions = user.subscriptions.all()
+        subscription = get_object_or_404(UserSubscription, pk=id)
+        if not subscription or subscription not in user_subscriptions:
+            return Response({"res": f"Subscription with id={id} does not exist for this user"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                            )
+        else:
+            user.subscriptions.remove(subscription)
+            subscription.delete()
+            return Response(
+                {"res": "Subscription deleted"},
+                status=status.HTTP_200_OK
+            )
