@@ -3,7 +3,6 @@ from rest_framework_simplejwt import views as jwt_views
 
 from . import views
 
-from rest_framework import permissions
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 

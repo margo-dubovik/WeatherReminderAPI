@@ -3,8 +3,9 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiExample
 import requests
+import json
 
 from .models import CityName, CityWeather, UserSubscription
 from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
@@ -13,6 +14,35 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+
+
+def get_weather(city_name, subscription_city_pk):
+    OWM_TOKEN = os.environ.get('OWM_TOKEN')
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={OWM_TOKEN}&units=metric"
+    weather_resp = requests.get(url).json()
+
+    weather_data = {
+        'city': subscription_city_pk,
+        'weather_description': weather_resp['weather'][0]['description'],
+        'temperature': weather_resp['main']['temp'],
+        'feels_like': weather_resp['main']['feels_like'],
+        'humidity': weather_resp['main']['humidity'],
+        'pressure': weather_resp['main']['pressure'],
+        'visibility': weather_resp['visibility'],
+        'wind_speed': weather_resp['wind']['speed'],
+        'clouds': weather_resp.get('clouds', {}).get('all', 0),
+        'rain': weather_resp.get('rain', {}).get('1h', 0),
+        'snow': weather_resp.get('snow', {}).get('1h', 0),
+    }
+
+    return weather_data
+
+
+def validate_serializer(serializer, error_message):
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        print(error_message, serializer.errors)
 
 
 class UserSubscriptionsView(APIView):
@@ -28,52 +58,42 @@ class UserSubscriptionsView(APIView):
 class NewSubscriptionView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @extend_schema(description='post description',
-                   parameters=[
-                    CityNameSerializer,
-                    OpenApiParameter("notification_frequency",
-                                     required=True, type=int)
+    @extend_schema(description='### Provide data for a new subscription.</br></br>'
+                               '"city": name of the city you subscribe to.</br>'
+                               '"state": optional. if not needed, just remove it.</br> '
+                               '"country_code": a 2-letter ISO Alpha-2 code.</br>'
+                               ' "notification_frequency": measured in hours.',
+                   examples=[OpenApiExample(
+                       'Example 1',
+                       value={
+                           'name': 'Detroit',
+                           'state': 'MI',
+                           'country_code': 'US',
+                           'notification_frequency': '2'},
+                   )],
+                   request=[
+                       CityNameSerializer(many=True),
                    ])
     def post(self, request):
+
+        request_body = json.loads(request.body)
+
         city_data = {
-            'name': request.POST['name'],
-            'state': request.POST.get('state', ''),
-            'country_code': request.POST['country_code'],
+            'name': request_body['name'],
+            'state': request_body.get('state', ''),
+            'country_code': request_body['country_code'],
         }
 
         if not CityName.objects.filter(name=city_data['name']).exists():
             city_serializer = CityNameSerializer(data=city_data)
-            if city_serializer.is_valid():
-                city_serializer.save()
-            else:
-                print("city_serializer errors:", city_serializer.errors)
+            validate_serializer(city_serializer, error_message="city_serializer errors:")
 
         subscription_city = CityName.objects.get(name=city_data['name'])
 
-        OWM_TOKEN = os.environ.get('OWM_TOKEN')
-        URL = f"https://api.openweathermap.org/data/2.5/weather?q={city_data['name']}&appid={OWM_TOKEN}&units=metric"
-        weather_resp = requests.get(URL).json()
-
-        weather_data = {
-            'city': subscription_city.pk,
-            'weather_description': weather_resp['weather'][0]['description'],
-            'temperature': weather_resp['main']['temp'],
-            'feels_like': weather_resp['main']['feels_like'],
-            'humidity': weather_resp['main']['humidity'],
-            'pressure': weather_resp['main']['pressure'],
-            'visibility': weather_resp['visibility'],
-            'wind_speed': weather_resp['wind']['speed'],
-            'clouds': weather_resp.get('clouds', {}).get('all', 0),
-            'rain': weather_resp.get('rain', {}).get('1h', 0),
-            'snow': weather_resp.get('snow', {}).get('1h', 0),
-        }
-
-        if not CityWeather.objects.filter(city=weather_data['city']).exists():
+        if not CityWeather.objects.filter(city=subscription_city).exists():
+            weather_data = get_weather(city_data['name'], subscription_city.pk)
             city_weather_serializer = CityWeatherSerializer(data=weather_data)
-            if city_weather_serializer.is_valid():
-                city_weather_serializer.save()
-            else:
-                print("city_weather_serializer errors:", city_weather_serializer.errors)
+            validate_serializer(city_weather_serializer, error_message="city_weather_serializer errors:")
 
         subscription_weather = CityWeather.objects.get(city=subscription_city.pk)
 
@@ -81,7 +101,7 @@ class NewSubscriptionView(APIView):
             'user': request.user.pk,
             'city': subscription_city.pk,
             'weather_info': subscription_weather.pk,
-            'notification_frequency': request.POST['notification_frequency'],
+            'notification_frequency': request_body['notification_frequency'],
         }
 
         subscription_serializer = UserSubscriptionSerializer(data=subscription_data)
@@ -95,6 +115,24 @@ class NewSubscriptionView(APIView):
 class SubscriptionActionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(description='### Write new updated information about your subscription.</br></br>'
+                               '"city": name of the city you subscribe to.</br>'
+                               '"state": optional. if not needed, just remove it.</br> '
+                               '"country_code": a 2-letter ISO Alpha-2 code.</br>'
+                               '"notification_frequency": measured in hours.',
+                   examples=[OpenApiExample(
+                       'Example 1',
+                       value={
+                           'city_data': {
+                               'name': 'Detroit',
+                               'state': 'MI',
+                               'country_code': 'US',
+                           },
+                           'notification_frequency': '2'},
+                   )],
+                   request=[
+                       CityNameSerializer(many=True),
+                   ])
     def put(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
@@ -104,10 +142,35 @@ class SubscriptionActionsView(APIView):
                             status=status.HTTP_400_BAD_REQUEST,
                             )
         else:
-            changes = request.data.get('changes')
-            new_data = {key: value for key, value in changes.items()}
-            print("new_data=", new_data)
-            subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_data, partial=True)
+            request_body = json.loads(request.body)
+            city_data = request_body['city_data']
+            # if any field about city has changed
+            if not CityName.objects.filter(name=city_data['name'],
+                                           state=city_data['state'],
+                                           country_code=city_data['country_code']).exists():
+                city_serializer = CityNameSerializer(data=city_data)
+
+                validate_serializer(city_serializer, error_message="city_serializer errors:")
+
+            subscription_city = CityName.objects.get(name=city_data['name'])
+
+            if not CityWeather.objects.filter(city=subscription_city).exists():
+                weather_data = get_weather(subscription_city.name, subscription_city.pk)
+                city_weather_serializer = CityWeatherSerializer(data=weather_data)
+                validate_serializer(city_weather_serializer, error_message="city_weather_serializer errors:")
+
+            subscription_weather = CityWeather.objects.get(city=subscription_city.pk)
+
+            new_subscription_data = {
+                'user': request.user.pk,
+                'city': subscription_city.pk,
+                'weather_info': subscription_weather.pk,
+                'notification_frequency': request_body.get('notification_frequency',
+                                                           subscription.notification_frequency),
+            }
+
+            subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_subscription_data,
+                                                                 partial=True)
             if subscription_serializer.is_valid():
                 subscription_serializer.save()
                 return Response({"res": "Subscription edited"}, status=status.HTTP_200_OK)
