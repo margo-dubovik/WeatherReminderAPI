@@ -102,11 +102,19 @@ class NewSubscriptionView(APIView):
             'country_code': request_body['country_code'],
         }
 
-        if not CityName.objects.filter(name=city_data['name']).exists():
+        if not CityName.objects.filter(name=city_data['name'],
+                                       state=city_data['state'],
+                                       country_code=city_data['country_code']).exists():
             city_serializer = CityNameSerializer(data=city_data)
             validate_serializer(city_serializer, error_message="city_serializer errors:")
 
-        subscription_city = CityName.objects.get(name=city_data['name'])
+        subscription_city = CityName.objects.get(name=city_data['name'],
+                                                 state=city_data['state'],
+                                                 country_code=city_data['country_code'])
+
+        if subscription_city.subscriptions.filter(user=request.user).exists():
+            return Response({'error': 'user is already subscribed to this city. you can edit an existing subscription'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if not CityWeather.objects.filter(city=subscription_city).exists():
             weather_data = get_weather(city_data['name'], subscription_city.pk)
@@ -167,10 +175,11 @@ class SubscriptionActionsView(APIView):
                                            state=city_data['state'],
                                            country_code=city_data['country_code']).exists():
                 city_serializer = CityNameSerializer(data=city_data)
-
                 validate_serializer(city_serializer, error_message="city_serializer errors:")
 
-            subscription_city = CityName.objects.get(name=city_data['name'])
+            subscription_city = CityName.objects.get(name=city_data['name'],
+                                                     state=city_data['state'],
+                                                     country_code=city_data['country_code'])
 
             if not CityWeather.objects.filter(city=subscription_city).exists():
                 weather_data = get_weather(subscription_city.name, subscription_city.pk)
