@@ -52,6 +52,16 @@ class UserSubscriptionsView(APIView):
         user = request.user
         subscriptions = user.subscriptions
         serializer = UserSubscriptionSerializer(subscriptions, many=True)
+        for subscriprion in serializer.data:
+            subscriprion.pop('user')
+            subscriprion.pop('weather_info')
+            subscriprion.pop('last_info_update')
+
+            city_id = subscriprion['city']
+            city = CityName.objects.get(id=city_id)
+            city_info = CityNameSerializer(city)
+            subscriprion['city'] = city_info.data
+
         return Response(serializer.data)
 
 
