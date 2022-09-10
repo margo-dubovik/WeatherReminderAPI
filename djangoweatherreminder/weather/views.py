@@ -45,6 +45,14 @@ def validate_serializer(serializer, error_message):
         print(error_message, serializer.errors)
 
 
+def remove_unused_entries():
+    cities = CityName.objects.all()
+    for city in cities:
+        city_subscriptions = city.subscriptions.all()
+        if not city_subscriptions:
+            city.delete()
+
+
 class UserSubscriptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -183,6 +191,7 @@ class SubscriptionActionsView(APIView):
                                                                  partial=True)
             if subscription_serializer.is_valid():
                 subscription_serializer.save()
+                remove_unused_entries()  # remove cities that nobody is subscribed for
                 return Response({"res": "Subscription edited"}, status=status.HTTP_200_OK)
             else:
                 return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -198,6 +207,7 @@ class SubscriptionActionsView(APIView):
         else:
             user.subscriptions.remove(subscription)
             subscription.delete()
+            remove_unused_entries()  # remove cities that nobody is subscribed for
             return Response(
                 {"res": "Subscription deleted"},
                 status=status.HTTP_200_OK
