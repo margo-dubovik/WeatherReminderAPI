@@ -1,12 +1,13 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
+import requests
+
 from .models import CityName, CityWeather, UserSubscription
 from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
-from rest_framework.permissions import IsAuthenticated
-
-import requests
 
 from dotenv import load_dotenv
 import os
@@ -27,9 +28,15 @@ class UserSubscriptionsView(APIView):
 class NewSubscriptionView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(description='post description',
+                   parameters=[
+                    CityNameSerializer,
+                    OpenApiParameter("notification_frequency",
+                                     required=True, type=int)
+                   ])
     def post(self, request):
         city_data = {
-            'name': request.POST['city_name'],
+            'name': request.POST['name'],
             'state': request.POST.get('state', ''),
             'country_code': request.POST['country_code'],
         }

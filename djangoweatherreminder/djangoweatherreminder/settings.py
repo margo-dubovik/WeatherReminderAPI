@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'weather',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'WeatherReminder API',
+    'DESCRIPTION': 'A service of weather notification',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 SIMPLE_JWT = {
@@ -91,9 +100,9 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
 
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': os.environ.get('RSA_PRIVATE_KEY'),
+    'VERIFYING_KEY': os.environ.get('RSA_PUBLIC_KEY'),
     'AUDIENCE': None,
     'ISSUER': None,
     'JWK_URL': None,
