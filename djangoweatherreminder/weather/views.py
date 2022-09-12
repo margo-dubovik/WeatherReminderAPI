@@ -47,7 +47,9 @@ def validate_serializer(serializer, error_message):
     if serializer.is_valid():
         serializer.save()
     else:
-        print(error_message, serializer.errors)
+        return Response({'errors': serializer.errors,
+                         'message': error_message},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 def remove_unused_entries():
