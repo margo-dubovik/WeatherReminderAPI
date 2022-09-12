@@ -43,11 +43,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'users',
+    'weather',
+
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    'weather',
     'drf_spectacular',
 ]
+
+AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

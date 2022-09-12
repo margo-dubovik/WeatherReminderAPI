@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+
+from django.conf import settings
 
 
 class CityName(models.Model):
@@ -32,7 +33,7 @@ class CityWeather(models.Model):
 
 
 class UserSubscription(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscriptions", null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subscriptions", null=True)
     city = models.ForeignKey(CityName, on_delete=models.CASCADE, related_name="subscriptions", null=True)
     weather_info = models.ForeignKey(CityWeather, on_delete=models.CASCADE, related_name="subscriptions", null=True)
     notification_frequency = models.IntegerField()
