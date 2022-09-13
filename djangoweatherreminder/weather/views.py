@@ -104,7 +104,7 @@ class NewSubscriptionView(APIView):
         if code != 200:
             return Response({'error': weather_data['message'],
                              'code': code},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_404_NOT_FOUND)
 
         else:
             if not CityName.objects.filter(name=city_data['name'],
