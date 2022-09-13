@@ -16,10 +16,8 @@ import os
 
 load_dotenv()
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -31,7 +29,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -92,9 +89,31 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'WeatherReminder API',
-    'DESCRIPTION': 'A service of weather notification',
+    'DESCRIPTION': """
+    A service of weather notification.
+    You can subscribe to cities, specify desired notification frequency and get notifications on your email. 
+    
+    Registration guide:
+    1. Register
+    2. Login with your email and password. You will get two json web tokens: access and refresh. 
+    Use access token to authorize (in the top-right of the page). Access token will be valid for the next 15 minutes.
+    3. When your access token expires, use your refresh token to get a new pair of tokens and authorize again. 
+    """,
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'TAGS': [{
+        "name": "auth",
+        "description": "auth operations"
+        },
+        {
+            "name": "api",
+            "description": "tokens operations"
+        },
+        {
+            "name": "subscriptions",
+            "description": "subscriptions operations"
+        },
+    ],
 }
 
 SIMPLE_JWT = {
@@ -143,7 +162,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -162,7 +180,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -174,7 +191,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -184,4 +200,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-

@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiExample
+from drf_spectacular.utils import extend_schema
 import requests
 import json
 
@@ -64,7 +64,8 @@ def remove_unused_entries():
 class UserSubscriptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @extend_schema(description='### Get the list of all your subscriptions', )
+    @extend_schema(description='### Get the list of all your subscriptions',
+                   tags=['subscriptions'],)
     def get(self, request):
         user = request.user
         subscriptions = user.subscriptions
@@ -91,7 +92,7 @@ class NewSubscriptionView(APIView):
                                '"state": available only for the USA locations. if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                ' "notification_frequency": measured in hours.',
-                   )
+                   tags=['subscriptions'],)
     def post(self, request):
 
         request_body = json.loads(request.body)
@@ -154,7 +155,7 @@ class SubscriptionActionsView(APIView):
                                '"state": available only for the USA locations. if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                '"notification_frequency": measured in hours.',
-                   )
+                   tags=['subscriptions'],)
     def put(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
@@ -201,7 +202,8 @@ class SubscriptionActionsView(APIView):
             else:
                 return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    @extend_schema(description='### Specify the id of the subscription you want to delete',)
+    @extend_schema(description='### Specify the id of the subscription you want to delete',
+                   tags=['subscriptions'],)
     def delete(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()

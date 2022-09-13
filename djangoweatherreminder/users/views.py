@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 from .serializers import RegistrationSerializer
 from .models import CustomUser
@@ -14,6 +15,9 @@ class RegistrationView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = RegistrationSerializer
 
+    @extend_schema(description='### Registration: provide your email and create a password, repeat  your password in '
+                               '"password2" parameter',
+                   tags=['auth'], )
     def post(self, request):
         request_body = json.loads(request.body)
         serializer = RegistrationSerializer(data=request_body)
@@ -31,6 +35,8 @@ class RegistrationView(APIView):
 class DeleteAccount(APIView):
     permission_classes = (IsAuthenticated, )
 
+    @extend_schema(description='### Delete your account',
+                   tags=['auth'], )
     def delete(self, request):
         user = request.user
         user.delete()
