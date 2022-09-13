@@ -1,7 +1,7 @@
 import json
 
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -26,3 +26,13 @@ class RegistrationView(APIView):
         else:
             return Response({'error': serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteAccount(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+
+        return Response({"result": "user deleted"}, status=status.HTTP_200_OK)
