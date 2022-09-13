@@ -8,7 +8,8 @@ import requests
 import json
 
 from .models import CityName, CityWeather, UserSubscription
-from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
+from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer, \
+    OneSubscriptionSerializer
 
 from dotenv import load_dotenv
 import os
@@ -63,6 +64,7 @@ def remove_unused_entries():
 class UserSubscriptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(description='### Get the list of all your subscriptions', )
     def get(self, request):
         user = request.user
         subscriptions = user.subscriptions
@@ -82,32 +84,19 @@ class UserSubscriptionsView(APIView):
 
 class NewSubscriptionView(APIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = OneSubscriptionSerializer
 
     @extend_schema(description='### Provide data for a new subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
                                '"state": available only for the USA locations. if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                ' "notification_frequency": measured in hours.',
-                   examples=[OpenApiExample(
-                       'Example 1',
-                       value={
-                           'name': 'Detroit',
-                           'state': 'MI',
-                           'country_code': 'US',
-                           'notification_frequency': '2'},
-                   )],
-                   request=[
-                       CityNameSerializer(many=True),
-                   ])
+                   )
     def post(self, request):
 
         request_body = json.loads(request.body)
 
-        city_data = {
-            'name': request_body['name'],
-            'state': request_body.get('state', ''),
-            'country_code': request_body['country_code'],
-        }
+        city_data = request_body['city']
 
         weather_data, code = get_weather(city_data)
         if code != 200:
@@ -156,24 +145,16 @@ class NewSubscriptionView(APIView):
 class SubscriptionActionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return OneSubscriptionSerializer
+
     @extend_schema(description='### Write new updated information about your subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
                                '"state": available only for the USA locations. if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                '"notification_frequency": measured in hours.',
-                   examples=[OpenApiExample(
-                       'Example 1',
-                       value={
-                           'city_data': {
-                               'name': 'Detroit',
-                               'state': 'MI',
-                               'country_code': 'US',
-                           },
-                           'notification_frequency': '2'},
-                   )],
-                   request=[
-                       CityNameSerializer(many=True),
-                   ])
+                   )
     def put(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
@@ -184,7 +165,7 @@ class SubscriptionActionsView(APIView):
                             )
         else:
             request_body = json.loads(request.body)
-            city_data = request_body['city_data']
+            city_data = request_body['city']
             # if any field about city has changed
             if not CityName.objects.filter(name=city_data['name'],
                                            state=city_data['state'],
@@ -220,6 +201,7 @@ class SubscriptionActionsView(APIView):
             else:
                 return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(description='### Specify the id of the subscription you want to delete',)
     def delete(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
