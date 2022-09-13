@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 
@@ -22,3 +23,18 @@ def api_client_with_authenticated_user(db, api_client, create_user):
     api_client.force_authenticate(user=user)
     yield api_client
     api_client.force_authenticate(user=None)
+
+
+@pytest.fixture
+def subscription(db, api_client_with_authenticated_user):
+    url = reverse('new_subscription')
+    data = {
+        "city": {
+            "name": "Kyiv",
+            "state": "",
+            "country_code": "UA"
+        },
+        "notification_frequency": 2
+    }
+
+    api_client_with_authenticated_user.post(url, data, format='json')

@@ -7,7 +7,7 @@ class CityName(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=150)
     country_code = models.CharField(max_length=2)
-    state = models.CharField(max_length=150, blank=True)
+    state = models.CharField(max_length=2, blank=True)
 
     def __str__(self):
         return f"{self.name}, {self.state}, {self.country_code}"

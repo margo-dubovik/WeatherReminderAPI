@@ -89,16 +89,14 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'WeatherReminder API',
-    'DESCRIPTION': """
-    A service of weather notification.
-    You can subscribe to cities, specify desired notification frequency and get notifications on your email. 
-    
-    Registration guide:
-    1. Register
-    2. Login with your email and password. You will get two json web tokens: access and refresh. 
-    Use access token to authorize (in the top-right of the page). Access token will be valid for the next 15 minutes.
-    3. When your access token expires, use your refresh token to get a new pair of tokens and authorize again. 
-    """,
+    'DESCRIPTION': 'A service of weather notification.</br>'
+    'You can subscribe to cities and get notifications on your email with frequency you choose.</br></br>'
+    '<b>Registration guide:</b></br>'
+    '1. Register</br>'
+    '2. Login with your email and password. You will get two json web tokens: access and refresh.</br>'
+    'Use access token to authorize (in the top-right of the page). Access token will be valid for the next 15 minutes.'
+                   '</br>'
+    '3. When your access token expires, use your refresh token to get a new pair of tokens and authorize again.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [{

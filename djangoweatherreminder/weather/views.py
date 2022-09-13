@@ -65,7 +65,7 @@ class UserSubscriptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(description='### Get the list of all your subscriptions',
-                   tags=['subscriptions'],)
+                   tags=['subscriptions'], )
     def get(self, request):
         user = request.user
         subscriptions = user.subscriptions
@@ -89,10 +89,11 @@ class NewSubscriptionView(APIView):
 
     @extend_schema(description='### Provide data for a new subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
-                               '"state": available only for the USA locations. if not needed, just remove it.</br> '
+                               '"state": a 2-letter ISO Alpha-2 code. available only for the USA locations. '
+                               'if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                ' "notification_frequency": measured in hours.',
-                   tags=['subscriptions'],)
+                   tags=['subscriptions'], )
     def post(self, request):
 
         request_body = json.loads(request.body)
@@ -102,7 +103,7 @@ class NewSubscriptionView(APIView):
         weather_data, code = get_weather(city_data)
         if code != 200:
             return Response({'error': weather_data['message'],
-                            'code': code},
+                             'code': code},
                             status=status.HTTP_400_BAD_REQUEST)
 
         else:
@@ -138,7 +139,7 @@ class NewSubscriptionView(APIView):
             subscription_serializer = UserSubscriptionSerializer(data=subscription_data)
             if subscription_serializer.is_valid():
                 subscription_serializer.save()
-                return Response(subscription_serializer.data, status=status.HTTP_201_CREATED)
+                return Response({'res': 'New subscription created successfully'}, status=status.HTTP_201_CREATED)
             else:
                 return Response(subscription_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -150,16 +151,23 @@ class SubscriptionActionsView(APIView):
         if self.request.method == 'PUT':
             return OneSubscriptionSerializer
 
+    def get_usersubscription_object(self, subscription_id):
+        try:
+            return UserSubscription.objects.get(id=subscription_id)
+        except UserSubscription.DoesNotExist:
+            return None
+
     @extend_schema(description='### Write new updated information about your subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
-                               '"state": available only for the USA locations. if not needed, just remove it.</br> '
+                               '"state": a 2-letter ISO Alpha-2 code. available only for the USA locations. '
+                               'if not needed, just remove it.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                '"notification_frequency": measured in hours.',
-                   tags=['subscriptions'],)
+                   tags=['subscriptions'], )
     def put(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
-        subscription = get_object_or_404(UserSubscription, pk=id)
+        subscription = self.get_usersubscription_object(subscription_id=id)
         if not subscription or subscription not in user_subscriptions:
             return Response({"res": f"Subscription with id={id} does not exist for this user"},
                             status=status.HTTP_400_BAD_REQUEST,
@@ -167,50 +175,57 @@ class SubscriptionActionsView(APIView):
         else:
             request_body = json.loads(request.body)
             city_data = request_body['city']
-            # if any field about city has changed
-            if not CityName.objects.filter(name=city_data['name'],
-                                           state=city_data['state'],
-                                           country_code=city_data['country_code']).exists():
-                city_serializer = CityNameSerializer(data=city_data)
-                validate_serializer(city_serializer, error_message="city_serializer errors:")
 
-            subscription_city = CityName.objects.get(name=city_data['name'],
-                                                     state=city_data['state'],
-                                                     country_code=city_data['country_code'])
-
-            if not CityWeather.objects.filter(city=subscription_city).exists():
-                weather_data = get_weather(subscription_city.name, subscription_city.pk)
-                city_weather_serializer = CityWeatherSerializer(data=weather_data)
-                validate_serializer(city_weather_serializer, error_message="city_weather_serializer errors:")
-
-            subscription_weather = CityWeather.objects.get(city=subscription_city.pk)
-
-            new_subscription_data = {
-                'user': request.user.pk,
-                'city': subscription_city.pk,
-                'weather_info': subscription_weather.pk,
-                'notification_frequency': request_body.get('notification_frequency',
-                                                           subscription.notification_frequency),
-            }
-
-            subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_subscription_data,
-                                                                 partial=True)
-            if subscription_serializer.is_valid():
-                subscription_serializer.save()
-                remove_unused_entries()  # remove cities that nobody is subscribed for
-                return Response({"res": "Subscription edited"}, status=status.HTTP_200_OK)
+            weather_data, code = get_weather(city_data)
+            if code != 200:
+                return Response({'error': weather_data['message'],
+                                 'code': code},
+                                status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                # if any field about city has changed
+                if not CityName.objects.filter(name=city_data['name'],
+                                               state=city_data['state'],
+                                               country_code=city_data['country_code']).exists():
+                    city_serializer = CityNameSerializer(data=city_data)
+                    validate_serializer(city_serializer, error_message="city_serializer errors:")
+
+                subscription_city = CityName.objects.get(name=city_data['name'],
+                                                         state=city_data['state'],
+                                                         country_code=city_data['country_code'])
+
+                if not CityWeather.objects.filter(city=subscription_city).exists():
+                    weather_data['city'] = subscription_city.pk
+                    city_weather_serializer = CityWeatherSerializer(data=weather_data)
+                    validate_serializer(city_weather_serializer, error_message="city_weather_serializer errors:")
+
+                subscription_weather = CityWeather.objects.get(city=subscription_city.pk)
+
+                new_subscription_data = {
+                    'user': request.user.pk,
+                    'city': subscription_city.pk,
+                    'weather_info': subscription_weather.pk,
+                    'notification_frequency': request_body.get('notification_frequency',
+                                                               subscription.notification_frequency),
+                }
+
+                subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_subscription_data,
+                                                                     partial=True)
+                if subscription_serializer.is_valid():
+                    subscription_serializer.save()
+                    remove_unused_entries()  # remove cities that nobody is subscribed for
+                    return Response({"res": "Subscription edited"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"res": subscription_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(description='### Specify the id of the subscription you want to delete',
-                   tags=['subscriptions'],)
+                   tags=['subscriptions'], )
     def delete(self, request, id):
         user = request.user
         user_subscriptions = user.subscriptions.all()
-        subscription = get_object_or_404(UserSubscription, pk=id)
+        subscription = self.get_usersubscription_object(subscription_id=id)
         if not subscription or subscription not in user_subscriptions:
             return Response({"res": f"Subscription with id={id} does not exist for this user"},
-                            status=status.HTTP_400_BAD_REQUEST,
+                            status=status.HTTP_404_NOT_FOUND,
                             )
         else:
             user.subscriptions.remove(subscription)
