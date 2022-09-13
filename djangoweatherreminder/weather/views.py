@@ -90,7 +90,7 @@ class NewSubscriptionView(APIView):
     @extend_schema(description='### Provide data for a new subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
                                '"state": a 2-letter ISO Alpha-2 code. available only for the USA locations. '
-                               'if not needed, just remove it.</br> '
+                               'if not needed, just leave it blank: <em>state: ""</em>.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                ' "notification_frequency": measured in hours.',
                    tags=['subscriptions'], )
@@ -160,7 +160,7 @@ class SubscriptionActionsView(APIView):
     @extend_schema(description='### Write new updated information about your subscription.</br></br>'
                                '"city": name of the city you subscribe to.</br>'
                                '"state": a 2-letter ISO Alpha-2 code. available only for the USA locations. '
-                               'if not needed, just remove it.</br> '
+                               'if not needed, just leave it blank: <em>state: ""</em>.</br> '
                                '"country_code": a 2-letter ISO Alpha-2 code.</br>'
                                '"notification_frequency": measured in hours.',
                    tags=['subscriptions'], )
