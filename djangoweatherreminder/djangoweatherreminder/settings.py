@@ -104,10 +104,6 @@ SPECTACULAR_SETTINGS = {
         "description": "auth operations"
         },
         {
-            "name": "api",
-            "description": "tokens operations"
-        },
-        {
             "name": "subscriptions",
             "description": "subscriptions operations"
         },
