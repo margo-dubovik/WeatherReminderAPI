@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
 from dotenv import load_dotenv
 import os
 
@@ -201,3 +203,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_BROKER_URL = 'pyamqp://localhost'
 CELERY_RESULT_BACKEND = 'rpc://localhost'
+
+CELERY_BEAT_SCHEDULE = {
+    'update-weather-table': {
+        'task': 'weather.tasks.update_weather_table',
+        'schedule': crontab(),
+    }
+}
