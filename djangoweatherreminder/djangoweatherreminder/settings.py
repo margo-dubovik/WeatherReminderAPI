@@ -208,5 +208,12 @@ CELERY_BEAT_SCHEDULE = {
     'update-weather-table': {
         'task': 'weather.tasks.update_weather_table',
         'schedule': crontab(),
-    }
+    },
+    'update-subscriptions-table': {
+        'task': 'weather.tasks.update_subscriptions_table',
+        'schedule': crontab(),
+    },
 }
+
+TIME_ZONE = 'UTC'
+USE_TZ = True

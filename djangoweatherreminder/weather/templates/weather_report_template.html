@@ -1,0 +1,13 @@
+{% autoescape off %}
+
+Hello, Here if your weather report:
+
+{% for key,value in city_data.items %}
+    <p>{{ key }} : {{ value }}</p>
+{% endfor %}
+
+{% for key,value in weather_data.items %}
+    <p>{{ key }} : {{ value }}</p>
+{% endfor %}
+
+{% endautoescape %}

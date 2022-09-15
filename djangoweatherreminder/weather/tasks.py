@@ -1,10 +1,12 @@
 from celery import shared_task
 from celery.schedules import crontab
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.template.loader import render_to_string
 
 from .models import CityName, CityWeather, UserSubscription
 from .views import get_weather, validate_serializer
-from .serializers import CityNameSerializer, CityWeatherSerializer
-
+from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
 
 
 @shared_task()
@@ -26,3 +28,45 @@ def update_weather_table():
             else:
                 print({'errors': city_weather_serializer.errors})
     print("weather updated")
+
+
+@shared_task()
+def update_subscriptions_table():
+    all_subscriptions = UserSubscription.objects.all()
+    for subscription in all_subscriptions:
+        # print("================================================")
+        # print("subscription.last_info_update=", subscription.last_info_update)
+        time_delta = timezone.now() - subscription.last_info_update
+        # print("time_delta=", time_delta)
+        # print("notification frequency:", timedelta(minutes=subscription.notification_frequency))
+        # if time_delta > timedelta(hours=subscription.notification_frequency):
+        if time_delta > timedelta(minutes=subscription.notification_frequency):  # for testing convenience
+            # print("Needs updating")
+            weather_data = CityWeatherSerializer(subscription.weather_info).data
+            city_data = CityNameSerializer(subscription.city).data
+            # print("new weather_data:", weather_data)
+            # send_email(weather_data, city_data)
+            # print("email sent!")
+            new_data = {
+                'last_info_update': timezone.now(),
+            }
+            subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_data, partial=True)
+            if subscription_serializer.is_valid():
+                subscription_serializer.save()
+                # print("subscription updated")
+            else:
+                print({'errors': subscription_serializer.errors})
+        # else:
+            # print("Does not need updating")
+    print("all subscriptions updated")
+
+
+def send_email(weather_data, city_data):
+    del weather_data['city']
+    del weather_data['last_info_update']
+
+    email_subject = "Welcome to DjangoGram! Confirm Your Email"
+    email_body = render_to_string('weather/weather_report_template.html', {
+        'weather_data': weather_data,
+        'city_data': city_data,
+    },)
