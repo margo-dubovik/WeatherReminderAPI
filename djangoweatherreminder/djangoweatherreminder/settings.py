@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
 ]
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'djangoweatherreminder.users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
