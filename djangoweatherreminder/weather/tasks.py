@@ -44,7 +44,7 @@ def send_email(weather_data, city_data, user):
         from_email=settings.EMAIL_FROM_USER,
         to=[user.email]
     )
-    # email.send()
+    email.send()
     print("email=", email)
 
 
