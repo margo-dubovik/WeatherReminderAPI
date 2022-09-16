@@ -2,7 +2,7 @@ import os
 from celery import Celery
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoweatherreminder.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'djangoweatherreminder.djangoweatherreminder.settings')
 
 app = Celery('djangoweatherreminder')
 
