@@ -15,10 +15,8 @@ from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscrip
 def update_weather_table():
     all_cities = CityName.objects.all()
     for city in all_cities:
-        # print("CITY:")
         city_weather = CityWeather.objects.get(city=city)
         city_data = CityNameSerializer(city).data
-        # print(city_data)
         weather_data, code = get_weather(city_data)
         if code != 200:
             print({'error': weather_data['message'], 'code': code})
@@ -26,7 +24,6 @@ def update_weather_table():
             city_weather_serializer = CityWeatherSerializer(instance=city_weather, data=weather_data, partial=True)
             if city_weather_serializer.is_valid():
                 city_weather_serializer.save()
-                # print("weather updated")
             else:
                 print({'errors': city_weather_serializer.errors})
     print("weather updated")
@@ -36,17 +33,11 @@ def update_weather_table():
 def update_subscriptions_table():
     all_subscriptions = UserSubscription.objects.all()
     for subscription in all_subscriptions:
-        # print("================================================")
-        # print("subscription.last_info_update=", subscription.last_info_update)
         time_delta = timezone.now() - subscription.last_info_update
-        # print("time_delta=", time_delta)
-        # print("notification frequency:", timedelta(minutes=subscription.notification_frequency))
         # if time_delta > timedelta(hours=subscription.notification_frequency):
         if time_delta > timedelta(minutes=subscription.notification_frequency):  # for testing convenience
-            # print("Needs updating")
             weather_data = CityWeatherSerializer(subscription.weather_info).data
             city_data = CityNameSerializer(subscription.city).data
-            # print("new weather_data:", weather_data)
             send_email(weather_data=weather_data, city_data=city_data, user=subscription.user)
             print("email sent!")
             new_data = {
@@ -55,11 +46,8 @@ def update_subscriptions_table():
             subscription_serializer = UserSubscriptionSerializer(instance=subscription, data=new_data, partial=True)
             if subscription_serializer.is_valid():
                 subscription_serializer.save()
-                # print("subscription updated")
             else:
                 print({'errors': subscription_serializer.errors})
-        # else:
-            # print("Does not need updating")
     print("all subscriptions updated")
 
 
