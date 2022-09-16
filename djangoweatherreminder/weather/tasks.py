@@ -11,7 +11,6 @@ from .views import get_weather, validate_serializer
 from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
 
 
-
 def update_weather_table():
     all_cities = CityName.objects.all()
     for city in all_cities:
@@ -28,6 +27,25 @@ def update_weather_table():
                 print({'errors': city_weather_serializer.errors})
     print("weather updated")
 
+
+def send_email(weather_data, city_data, user):
+    del weather_data['city']
+    del weather_data['last_info_update']
+
+    email_subject = "Weather report"
+    email_body = render_to_string('weather/weather_report_template.html', {
+        'weather_data': weather_data,
+        'city_data': city_data,
+    },)
+    print("email body=", email_body)
+    email = EmailMessage(
+        subject=email_subject,
+        body=email_body,
+        from_email=settings.EMAIL_FROM_USER,
+        to=[user.email]
+    )
+    # email.send()
+    print("email=", email)
 
 
 def update_subscriptions_table():
@@ -49,26 +67,6 @@ def update_subscriptions_table():
             else:
                 print({'errors': subscription_serializer.errors})
     print("all subscriptions updated")
-
-
-def send_email(weather_data, city_data, user):
-    del weather_data['city']
-    del weather_data['last_info_update']
-
-    email_subject = "Weather report"
-    email_body = render_to_string('weather/weather_report_template.html', {
-        'weather_data': weather_data,
-        'city_data': city_data,
-    },)
-    print("email body=", email_body)
-    email = EmailMessage(
-        subject=email_subject,
-        body=email_body,
-        from_email=settings.EMAIL_FROM_USER,
-        to=[user.email]
-    )
-    # email.send()
-    print("email=", email)
 
 
 @shared_task()
