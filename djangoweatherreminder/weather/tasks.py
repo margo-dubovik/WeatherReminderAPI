@@ -3,7 +3,7 @@ from celery.schedules import crontab
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import CityName, CityWeather, UserSubscription
@@ -36,16 +36,17 @@ def send_email(weather_data, city_data, user):
     email_body = render_to_string('weather/weather_report_template.html', {
         'weather_data': weather_data,
         'city_data': city_data,
-    },)
+    }, )
     print("email body=", email_body)
-    email = EmailMessage(
+    print("user.email=", user.email)
+    send_mail(
         subject=email_subject,
-        body=email_body,
+        message="weather report",
+        html_message=email_body,
         from_email=settings.EMAIL_FROM_USER,
-        to=[user.email]
+        recipient_list=[user.email],
+        fail_silently=False,  # CHANGE to TRUE LATER!!!!
     )
-    email.send()
-    print("email=", email)
 
 
 def update_subscriptions_table():

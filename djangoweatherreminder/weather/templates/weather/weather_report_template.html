@@ -1,13 +1,23 @@
-{% autoescape off %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
 
-Hello, Here if your weather report:
+<p>Hello! Here if your weather report:</p>
 
+<ul>
 {% for key,value in city_data.items %}
-    <p>{{ key }} : {{ value }}</p>
+    <li><p>{{ key }} : {{ value }}</p></li>
 {% endfor %}
+</ul>
 
+<ul>
 {% for key,value in weather_data.items %}
-    <p>{{ key }} : {{ value }}</p>
+    <li><p>{{ key }} : {{ value }}</p></li>
 {% endfor %}
+</ul>
 
-{% endautoescape %}
+</body>
+</html>
