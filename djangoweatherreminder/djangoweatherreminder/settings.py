@@ -67,7 +67,7 @@ ROOT_URLCONF = 'djangoweatherreminder.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates', BASE_DIR / 'djangoweatherreminder' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -211,5 +211,13 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-TIME_ZONE = 'UTC'
-USE_TZ = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://warm-island-46315.herokuapp.com'
+]
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('APP_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True

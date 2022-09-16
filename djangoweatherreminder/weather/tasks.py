@@ -3,6 +3,8 @@ from celery.schedules import crontab
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+from django.conf import settings
 
 from .models import CityName, CityWeather, UserSubscription
 from .views import get_weather, validate_serializer
@@ -45,8 +47,8 @@ def update_subscriptions_table():
             weather_data = CityWeatherSerializer(subscription.weather_info).data
             city_data = CityNameSerializer(subscription.city).data
             # print("new weather_data:", weather_data)
-            # send_email(weather_data, city_data)
-            # print("email sent!")
+            send_email(weather_data=weather_data, city_data=city_data, user=subscription.user)
+            print("email sent!")
             new_data = {
                 'last_info_update': timezone.now(),
             }
@@ -61,15 +63,24 @@ def update_subscriptions_table():
     print("all subscriptions updated")
 
 
-def send_email(weather_data, city_data):
+def send_email(weather_data, city_data, user):
     del weather_data['city']
     del weather_data['last_info_update']
 
-    email_subject = "Welcome to DjangoGram! Confirm Your Email"
+    email_subject = "Weather report"
     email_body = render_to_string('weather/weather_report_template.html', {
         'weather_data': weather_data,
         'city_data': city_data,
     },)
+    print("email body=", email_body)
+    email = EmailMessage(
+        subject=email_subject,
+        body=email_body,
+        from_email=settings.EMAIL_FROM_USER,
+        to=[user.email]
+    )
+    # email.send()
+    print("email=", email)
 
 
 @shared_task()
