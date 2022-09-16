@@ -205,12 +205,8 @@ CELERY_BROKER_URL = 'pyamqp://localhost'
 CELERY_RESULT_BACKEND = 'rpc://localhost'
 
 CELERY_BEAT_SCHEDULE = {
-    'update-weather-table': {
-        'task': 'weather.tasks.update_weather_table',
-        'schedule': crontab(),
-    },
-    'update-subscriptions-table': {
-        'task': 'weather.tasks.update_subscriptions_table',
+    'update-tables-and-send-emails': {
+        'task': 'weather.tasks.update_tables_and_send_emails',
         'schedule': crontab(),
     },
 }

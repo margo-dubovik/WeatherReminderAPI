@@ -9,7 +9,7 @@ from .views import get_weather, validate_serializer
 from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
 
 
-@shared_task()
+
 def update_weather_table():
     all_cities = CityName.objects.all()
     for city in all_cities:
@@ -30,7 +30,7 @@ def update_weather_table():
     print("weather updated")
 
 
-@shared_task()
+
 def update_subscriptions_table():
     all_subscriptions = UserSubscription.objects.all()
     for subscription in all_subscriptions:
@@ -70,3 +70,10 @@ def send_email(weather_data, city_data):
         'weather_data': weather_data,
         'city_data': city_data,
     },)
+
+
+@shared_task()
+def update_tables_and_send_emails():
+    update_weather_table()
+    update_subscriptions_table()
+    print("ALL TASKS COMPLETE")
