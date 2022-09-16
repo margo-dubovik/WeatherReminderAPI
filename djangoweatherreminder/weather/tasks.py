@@ -76,5 +76,4 @@ def update_tables_and_send_emails():
     print("ALL TASKS COMPLETE")
 
 
-if __name__ == '__main__':
-    update_tables_and_send_emails()
+update_tables_and_send_emails()
