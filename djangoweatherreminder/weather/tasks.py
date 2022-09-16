@@ -77,4 +77,4 @@ def update_tables_and_send_emails():
     print("ALL TASKS COMPLETE")
 
 
-update_tables_and_send_emails()
+
