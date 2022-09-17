@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import CityName, CityWeather, UserSubscription
-from .views import get_weather, validate_serializer
+from .views import get_weather
 from .serializers import CityNameSerializer, CityWeatherSerializer, UserSubscriptionSerializer
 
 
