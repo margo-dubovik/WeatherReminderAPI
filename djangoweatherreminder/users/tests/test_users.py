@@ -4,7 +4,6 @@ import json
 from django.urls import reverse
 
 
-@pytest.mark.skip
 @pytest.mark.django_db
 def test_registration(api_client):
     url = reverse('register')
@@ -19,7 +18,7 @@ def test_registration(api_client):
     assert response_json['res'] == 'Registered successfully'
     assert response_json['user info'] == {'email': data['email']}
 
-@pytest.mark.skip
+
 @pytest.mark.django_db
 def test_registration_fail(api_client):
     url = reverse('register')
@@ -34,7 +33,6 @@ def test_registration_fail(api_client):
     assert response_json['error'] == {'email': ['Enter a valid email address.']}
 
 
-@pytest.mark.skip
 @pytest.mark.django_db
 def test_delete_account(api_client_with_authenticated_user):
     url = reverse('delete_account')

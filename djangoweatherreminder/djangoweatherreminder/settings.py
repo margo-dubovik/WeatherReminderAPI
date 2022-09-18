@@ -211,7 +211,7 @@ CELERY_RESULT_BACKEND = 'rpc://localhost'
 CELERY_BEAT_SCHEDULE = {
     'update-tables-and-send-emails': {
         'task': 'weather.tasks.update_tables_and_send_emails',
-        'schedule': crontab(),
+        'schedule': crontab(minute=0),
     },
 }
 
