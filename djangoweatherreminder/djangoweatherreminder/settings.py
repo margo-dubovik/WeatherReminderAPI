@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
 from dotenv import load_dotenv
 import os
 
@@ -29,6 +31,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'warm-island-46315.herokuapp.com']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://warm-island-46315.herokuapp.com'
+]
 
 # Application definition
 
@@ -65,7 +71,7 @@ ROOT_URLCONF = 'djangoweatherreminder.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates', BASE_DIR / 'djangoweatherreminder' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,19 +96,19 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'WeatherReminder API',
     'DESCRIPTION': 'A service of weather notification.</br>'
-    'You can subscribe to cities and get notifications on your email with frequency you choose.</br></br>'
-    '<b>Registration guide:</b></br>'
-    '1. Register</br>'
-    '2. Login with your email and password. You will get two json web tokens: access and refresh.</br>'
-    'Use access token to authorize (in the top-right of the page). Access token will be valid for the next 15 minutes.'
+                   'You can subscribe to cities and get notifications on your email with frequency you choose.</br></br>'
+                   '<b>Registration guide:</b></br>'
+                   '1. Register</br>'
+                   '2. Login with your email and password. You will get two json web tokens: access and refresh.</br>'
+                   'Use access token to authorize (in the top-right of the page). Access token will be valid for the next 15 minutes.'
                    '</br>'
-    '3. When your access token expires, use your refresh token to get a new pair of tokens and authorize again.',
+                   '3. When your access token expires, use your refresh token to get a new pair of tokens and authorize again.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [{
         "name": "auth",
         "description": "auth operations"
-        },
+    },
         {
             "name": "subscriptions",
             "description": "subscriptions operations"
@@ -198,3 +204,36 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BROKER_URL = 'pyamqp://localhost'
+CELERY_RESULT_BACKEND = 'rpc://localhost'
+
+CELERY_BEAT_SCHEDULE = {
+    'update-tables-and-send-emails': {
+        'task': 'weather.tasks.update_tables_and_send_emails',
+        'schedule': crontab(minute=0),
+    },
+}
+
+# CLOUDAMQP settings
+broker_url = os.environ.get('CLOUDAMQP_URL')
+broker_pool_limit = 1  # Will decrease connection usage
+broker_heartbeat = None  # We're using TCP keep-alive instead
+broker_connection_timeout = 30  # May require a long timeout due to Linux DNS timeouts etc
+result_backend = None  # AMQP is not recommended as result backend as it creates thousands of queues
+event_queue_expires = 60  # Will delete all celeryev. queues without consumers after 1 minute.
+worker_prefetch_multiplier = 1  # Disable prefetching, it's causes problems and doesn't help performance
+worker_concurrency = 50  # If you tasks are CPU bound,then limit to the number of cores, otherwise increase substainally
+
+# worker_send_task_events = True
+
+
+
+# Email settings
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('APP_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+

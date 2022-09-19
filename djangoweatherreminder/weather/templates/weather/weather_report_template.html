@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<p>Hello! Here if your weather report:</p>
+
+<ul>
+{% for key,value in city_data.items %}
+    <li><p>{{ key }} : {{ value }}</p></li>
+{% endfor %}
+</ul>
+
+<ul>
+{% for key,value in weather_data.items %}
+    <li><p>{{ key }} : {{ value }}</p></li>
+{% endfor %}
+</ul>
+
+</body>
+</html>
